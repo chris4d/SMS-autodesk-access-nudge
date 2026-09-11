@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/SmsNudge/SmsNudge.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/SmsNudge.Tests/SmsNudge.Tests.csproj" />
+  </Folder>
+</Solution>
