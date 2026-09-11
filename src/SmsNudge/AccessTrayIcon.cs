@@ -10,9 +10,11 @@ internal sealed class AccessTrayIcon : IDisposable
     private readonly UpdateMonitor _monitor;
     private readonly ToolStripMenuItem _statusItem;
     private readonly ToolStripMenuItem _autostartItem;
+    private readonly EventWaitHandle _shutdownSignal;
 
-    public AccessTrayIcon(AppConfig config)
+    public AccessTrayIcon(AppConfig config, EventWaitHandle shutdownSignal)
     {
+        _shutdownSignal = shutdownSignal;
         var configDir = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "SMS-autodesk-access-nudge");
@@ -28,7 +30,7 @@ internal sealed class AccessTrayIcon : IDisposable
         _autostartItem.Click += (_, _) =>
         {
             if (AutoStart.IsEnabled()) AutoStart.Disable();
-            else AutoStart.Enable(Environment.ProcessPath ?? System.Reflection.Assembly.GetExecutingAssembly().Location);
+            else if (Environment.ProcessPath is { } exePath) AutoStart.Enable(exePath);
             _autostartItem.Checked = AutoStart.IsEnabled();
         };
 
@@ -69,7 +71,21 @@ internal sealed class AccessTrayIcon : IDisposable
         set => _icon.Visible = value;
     }
 
-    public void Start() => _monitor.Start();
+    public void Start()
+    {
+        _monitor.Start();
+        Task.Run(WaitForShutdownSignal);
+    }
+
+    private void WaitForShutdownSignal()
+    {
+        try
+        {
+            _shutdownSignal.WaitOne();
+            ExitRequested?.Invoke();
+        }
+        catch { }
+    }
 
     public void Dispose()
     {

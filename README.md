@@ -68,12 +68,40 @@ dotnet run --project src\SmsNudge -- --once
 Requires .NET 8 SDK and Windows 10+ (toast notifications and the SQLite
 bundles are Windows-and-Win32 specific); admin rights are never required.
 
+## Packaging (suite contract)
+
+The app is published per contract for the utility suite:
+
+- **Conventional installer**: `Setup-SmsNudge-vX.Y.Z.exe` attached to every GitHub
+  Release, built via Inno Setup 6 from `installer/Setup.iss`.
+- **Silent install**: Inno flags are supported natively — `/VERYSILENT /NORESTART /SUPPRESSMSGBOXES`.
+- **ARP entry**: Inno Setup registers `Autodesk Access Nudge` under
+  `HKCU\Software\Microsoft\Windows\CurrentVersion\Uninstall\{AppId}`
+  (per-user; **no elevation required**).
+- **Idempotent**: rerunning the installer upgrades in place (same `AppId`) and
+  relaunches the tray. `--shutdown` stops a running instance during upgrades/uninstalls.
+- **Digest**: each release also ships `Setup-SmsNudge-vX.Y.Z.sha256`; the
+  release SHA-256 is meant to be checked by the suite's staged-payload
+  verification (same pattern as AnythingLLM/Revit payloads).
+
+Build locally:
+
+```
+powershell -File scripts\build-installer.ps1 -Version 0.1.0
+```
+
+Requires Inno Setup 6 (`winget install --id JRSoftware.InnoSetup`) and .NET 8 SDK.
+The GitHub Actions workflow (`.github/workflows/release.yml`) builds and
+publishes on `v*` tags or manual dispatch.
+
 ## Files
 
 - `src/SmsNudge/AccessStateReader.cs` — SQLite read + `ComputeAvailableUpdates` logic
 - `src/SmsNudge/UpdateMonitor.cs`      — polling, filtering, dedupe, toast trigger
 - `src/SmsNudge/AccessTrayIcon.cs`     — tray UI
 - `src/SmsNudge/ToastNotifier.cs`      — Windows toast plumbing
+- `installer/Setup.iss`                — per-user Inno Setup script
+- `scripts/build-installer.ps1`        — publish + Inno build + SHA-256
 - `tests/SmsNudge.Tests/`              — detection-rule unit tests
 
 ## Notes / limitations

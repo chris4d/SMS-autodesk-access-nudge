@@ -1,0 +1,61 @@
+name: build-and-release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version without the 'v' prefix (e.g. 0.1.1)"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Derive version
+        id: version
+        shell: pwsh
+        run: |
+          if ("${{ github.event_name }}" -eq "workflow_dispatch") {
+            $v = "${{ inputs.version }}"
+          } else {
+            $v = "${{ github.ref_name }}" -replace '^v', ''
+          }
+          "version=$v" | Add-Content $env:GITHUB_OUTPUT
+          "version_tag=v$v" | Add-Content $env:GITHUB_OUTPUT
+
+      - name: Install Inno Setup 6
+        shell: pwsh
+        run: |
+          winget install --id JRSoftware.InnoSetup --exact --silent --accept-source-agreements --accept-package-agreements
+          Add-Content $env:GITHUB_PATH "${env:ProgramFiles(x86)}\Inno Setup 6"
+
+      - name: Build and test
+        shell: pwsh
+        run: |
+          dotnet build
+          dotnet test --no-build
+
+      - name: Build installer
+        shell: pwsh
+        run: powershell -ExecutionPolicy Bypass -File scripts\build-installer.ps1 -Version ${{ steps.version.outputs.version }}
+
+      - name: Publish GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.version_tag }}
+          name: "${{ steps.version.outputs.version_tag }}"
+          files: |
+            dist/*
+          draft: false
+          prerelease: false

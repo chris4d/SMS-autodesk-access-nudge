@@ -4,6 +4,9 @@ namespace SmsNudge;
 
 internal static class Program
 {
+    private const string ShutdownEventName = "SMS-autodesk-access-nudge-shutdown";
+    private const string SingleInstanceMutexName = "SMS-autodesk-access-nudge-single-instance";
+
     [STAThread]
     private static int Main(string[] args)
     {
@@ -17,12 +20,34 @@ internal static class Program
             ToastNotifier.ShowRunningTest();
             return 0;
         }
+        if (args.Any(a => a.Equals("--remove-autostart", StringComparison.OrdinalIgnoreCase)))
+        {
+            AutoStart.Disable();
+            return 0;
+        }
+        if (args.Any(a => a.Equals("--shutdown", StringComparison.OrdinalIgnoreCase)))
+        {
+            if (EventWaitHandle.TryOpenExisting(ShutdownEventName, out var existing))
+            {
+                existing.Set();
+                existing.Dispose();
+            }
+            return 0;
+        }
+        if (args.Any(a => a.Equals("--autostart", StringComparison.OrdinalIgnoreCase)))
+            AutoStart.Enable(Environment.ProcessPath ?? throw new InvalidOperationException("No executable path"));
 
-        ApplicationConfiguration.Initialize();
-        using var icon = new AccessTrayIcon(config);
-        icon.Start();
-        Application.Run(new TrayApplicationContext(icon));
-        return 0;
+        using var shutdown = new EventWaitHandle(false, EventResetMode.AutoReset, ShutdownEventName);
+        using (new Mutex(true, SingleInstanceMutexName, out var first))
+        {
+            if (!first) return 0;
+
+            ApplicationConfiguration.Initialize();
+            using var icon = new AccessTrayIcon(config, shutdown);
+            icon.Start();
+            Application.Run(new TrayApplicationContext(icon));
+            return 0;
+        }
     }
 
     private static AppConfig LoadConfig()

@@ -1,6 +1,8 @@
 bin/
 obj/
-.user
+publish/
+dist/
+installer/output/
 .vs/
 *.user
 *.suo
