@@ -35,7 +35,13 @@ internal static class Program
             return 0;
         }
         if (args.Any(a => a.Equals("--autostart", StringComparison.OrdinalIgnoreCase)))
+        {
+            // Register-and-exit: --autostart must NOT fall through into the tray
+            // message loop. A blocking installer [Run] entry would otherwise wait
+            // forever for a tray app that only exits on shutdown.
             AutoStart.Enable(Environment.ProcessPath ?? throw new InvalidOperationException("No executable path"));
+            return 0;
+        }
 
         using var shutdown = new EventWaitHandle(false, EventResetMode.AutoReset, ShutdownEventName);
         using (new Mutex(true, SingleInstanceMutexName, out var first))
