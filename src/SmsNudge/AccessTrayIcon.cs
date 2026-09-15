@@ -47,7 +47,7 @@ internal sealed class AccessTrayIcon : IDisposable
         _icon = new NotifyIcon
         {
             Icon = SystemIcons.Application,
-            Text = "Autodesk Access Nudge",
+            Text = "SMS Autodesk Access Nudge",
             ContextMenuStrip = menu,
             Visible = false
         };
@@ -93,3 +93,4 @@ internal sealed class AccessTrayIcon : IDisposable
         _icon.Dispose();
     }
 }
+

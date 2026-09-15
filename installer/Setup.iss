@@ -1,7 +1,7 @@
 ; Per-user (non-elevated) Inno Setup 6 script for Autodesk Access Nudge.
 ; Define AppVersion when invoking, e.g.: ISCC /DAppVersion=1.0.0 Setup.iss
 
-#define AppName "Autodesk Access Nudge"
+#define AppName "SMS Autodesk Access Nudge"
 #define AppId "{1F4B02D2-C37C-4A44-8A8A-C64C0E844512}"
 #define ExePath "..\src\SmsNudge\publish\SmsNudge.exe"
 

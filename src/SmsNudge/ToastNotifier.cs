@@ -29,7 +29,7 @@ public static class ToastNotifier
         try
         {
             new ToastContentBuilder()
-                .AddText("Autodesk Access Nudge running")
+                .AddText("SMS Autodesk Access Nudge running")
                 .AddText("No new product updates detected right now.")
                 .Show();
         }
@@ -39,3 +39,4 @@ public static class ToastNotifier
         }
     }
 }
+

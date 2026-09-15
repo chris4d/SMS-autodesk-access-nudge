@@ -150,8 +150,9 @@ public static class ProductPaths
         if (File.Exists(exe))
             Process.Start(new ProcessStartInfo(exe) { UseShellExecute = true });
         else
-            MessageBox.Show($"Autodesk Access executable not found:\n{exe}", "Autodesk Access Nudge",
+            MessageBox.Show($"Autodesk Access executable not found:\n{exe}", "SMS Autodesk Access Nudge",
                 MessageBoxButtons.OK, MessageBoxIcon.Warning);
     }
 }
+
 
