@@ -33,12 +33,17 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 [Files]
 Source: "{#ExePath}"; DestDir: "{app}"; Flags: ignoreversion
 
+[Tasks]
+Name: "autostart"; Description: "Automatically start SMS Autodesk Access Nudge when Windows starts"; \
+    GroupDescription: "Startup:"; Flags: checkedonce
+; Suite can disable via /MERGETASKS=!autostart
+
 [Icons]
 Name: "{autoprograms}\{#AppName}"; Filename: "{app}\SmsNudge.exe"
 
 [Run]
 Filename: "{app}\SmsNudge.exe"; Parameters: "--tray"; Flags: postinstall skipifsilent nowait; Description: "{cm:LaunchProgram,{#AppName}}"
-Filename: "{app}\SmsNudge.exe"; Parameters: "--autostart"; Flags: runhidden
+Filename: "{app}\SmsNudge.exe"; Parameters: "--autostart"; Flags: runhidden; Tasks: autostart
 
 [UninstallRun]
 Filename: "{app}\SmsNudge.exe"; Parameters: "--shutdown"; Flags: runhidden

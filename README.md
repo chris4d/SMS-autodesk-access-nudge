@@ -83,6 +83,14 @@ The app is published per contract for the utility suite:
 - **Digest**: each release also ships `Setup-SmsNudge-vX.Y.Z.sha256`; the
   release SHA-256 is meant to be checked by the suite's staged-payload
   verification (same pattern as AnythingLLM/Revit payloads).
+- **Login autostart** is owned by this utility's installer, not the suite:
+  the installer registers a per-user HKCU Run key (`SMS-autodesk-access-nudge`)
+  that launches the tray app at login, and the uninstaller removes it. Default
+  is enabled; a silently-installed suite gets autostart automatically. To
+  disable for a given install, pass Inno's standard
+  `/MERGETASKS=!autostart` flag. The tray itself only launches immediately
+  after interactive installs — suite-deployed machines show the tray at their
+  next login.
 
 Build locally:
 
