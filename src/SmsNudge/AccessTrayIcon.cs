@@ -52,7 +52,7 @@ internal sealed class AccessTrayIcon : IDisposable
 
         _icon = new NotifyIcon
         {
-            Icon = SystemIcons.Application,
+            Icon = LoadAppIcon(),
             Text = "SMS Autodesk Access Nudge",
             ContextMenuStrip = menu,
             Visible = false
@@ -69,6 +69,23 @@ internal sealed class AccessTrayIcon : IDisposable
             catch { }
             NudgeLogger.Info($"Status: {status}");
         }, filter: u => config.MatchesPlc(u.Plc));
+    }
+
+    private Icon LoadAppIcon()
+    {
+        try
+        {
+            var icoPath = Path.Combine(AppContext.BaseDirectory, "assets", "app-icon.ico");
+            if (File.Exists(icoPath))
+                return new Icon(icoPath);
+            if (Environment.ProcessPath is { } exe)
+                return Icon.ExtractAssociatedIcon(exe) ?? SystemIcons.Application;
+        }
+        catch (Exception ex)
+        {
+            NudgeLogger.Error("Falling back to system icon", ex);
+        }
+        return SystemIcons.Application;
     }
 
     public bool Visible
