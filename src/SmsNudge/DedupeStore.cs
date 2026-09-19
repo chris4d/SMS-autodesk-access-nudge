@@ -1,8 +1,15 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace SmsNudge;
 
-public sealed record NotifiedState(string LastNotifiedKey, string? LastNotifiedUtc);
+public sealed record NotifiedState(string LastNotifiedKey, string LastNotifiedUtc)
+{
+    public NotifiedState() : this(string.Empty, string.Empty) { }
+
+    [JsonPropertyName("LastDigestDate")]
+    public string LastDigestDate { get; set; } = string.Empty;
+}
 
 public sealed class DedupeStore
 {

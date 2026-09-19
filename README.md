@@ -45,13 +45,23 @@ Left-click or double-left-click also triggers an immediate check.
 {
   "PollIntervalMinutes": 15,
   "EnableAutoStart": true,
-  "PlcFilter": []
+  "PlcFilter": [],
+  "NotifTiming": {
+    "Mode": "Immediate",
+    "DigestTime": "16:30",
+    "DigestDays": ["Mon", "Tue", "Wed", "Thu", "Fri"]
+  }
 }
 ```
 
 - `PollIntervalMinutes` — how often to re-read Access's state
 - `PlcFilter` — restrict notifications to certain product lines, e.g. `["RVT", "ACD"]`.
   Empty means all products Access covers.
+- `NotifTiming.Mode` — `Immediate` (default: toast as soon as a new update set
+  is detected) or `DailyDigest` (no per-update toasts; one daily digest toast
+  at `DigestTime` local time on `DigestDays`, listing the updates that are
+  still pending at that moment; silently skipped when nothing is pending, and
+  sent once per day even if the app starts after the digest time)
 - Product line codes seen in practice: `RVT` (Revit), `ACD` (AutoCAD),
   `DSKCON` (Desktop Connector), `ASC` (Shared Components), `CIV3D` (Civil 3D), etc.
 

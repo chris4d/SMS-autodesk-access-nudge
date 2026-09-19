@@ -25,6 +25,27 @@ public static class ToastNotifier
         }
     }
 
+    public static void ShowDigest(IReadOnlyList<AvailableUpdate> updates)
+    {
+        var first = updates[0];
+        var body = updates.Count == 1
+            ? $"{first.Name}  v{first.InstalledVersion} → v{first.AvailableVersion}"
+            : $"{first.Name} and {updates.Count - 1} other pending update(s)";
+
+        try
+        {
+            new ToastContentBuilder()
+                .AddText("Autodesk updates pending")
+                .AddText(body)
+                .SetToastScenario(ToastScenario.Reminder)
+                .Show(t => t.ExpirationTime = DateTime.Now.AddHours(12));
+        }
+        catch (Exception ex)
+        {
+            NudgeLogger.Error("Digest toast failed", ex);
+        }
+    }
+
     public static void ShowRunningTest()
     {
         try

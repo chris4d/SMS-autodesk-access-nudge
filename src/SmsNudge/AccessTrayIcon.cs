@@ -63,7 +63,7 @@ internal sealed class AccessTrayIcon : IDisposable
             }
             catch { }
             NudgeLogger.Info($"Status: {status}");
-        }, filter: u => config.MatchesPlc(u.Plc));
+        }, timing: config.Timing, filter: u => config.MatchesPlc(u.Plc));
     }
 
     private Icon LoadAppIcon()
