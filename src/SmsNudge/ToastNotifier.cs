@@ -16,6 +16,7 @@ public static class ToastNotifier
             new ToastContentBuilder()
                 .AddText("Autodesk updates available")
                 .AddText(body)
+                .SetToastScenario(ToastScenario.Reminder)
                 .Show(t => t.ExpirationTime = DateTime.Now.AddHours(12));
         }
         catch (Exception ex)

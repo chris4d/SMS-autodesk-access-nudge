@@ -19,6 +19,20 @@ internal static class Program
             Console.WriteLine(new AccessStateReader().DumpRaw());
             return 0;
         }
+        if (args.Any(a => a.Equals("--notify-now", StringComparison.OrdinalIgnoreCase)))
+        {
+            new DedupeStore(Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "SMS-autodesk-access-nudge", "notified-state.json")).Clear();
+            var snapshot = new AccessStateReader().ReadSnapshot();
+            if (snapshot.Updates.Count == 0)
+            {
+                ToastNotifier.ShowRunningTest();
+                return 0;
+            }
+            ToastNotifier.ShowUpdatesAvailable(snapshot.Updates);
+            return 0;
+        }
         if (args.Any(a => a.Equals("--test-toast", StringComparison.OrdinalIgnoreCase)))
         {
             ApplicationConfiguration.Initialize();

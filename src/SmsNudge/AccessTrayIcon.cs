@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Drawing;
 
 namespace SmsNudge;
@@ -39,13 +40,8 @@ internal sealed class AccessTrayIcon : IDisposable
         menu.Items.Add(_statusItem);
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add("Open Autodesk Access", null, (_, _) => ProductPaths.LaunchAutodeskAccess());
-        menu.Items.Add("Check now", null, (_, _) => _monitor?.RunOnceManually());
-        menu.Items.Add("Re-notify now", null, (_, _) =>
-        {
-            _dedupe.Clear();
-            _monitor?.RunOnceManually();
-        });
-        menu.Items.Add("Show test toast", null, (_, _) => ToastNotifier.ShowRunningTest());
+        menu.Items.Add("Open notification settings", null, (_, _) =>
+            Process.Start(new ProcessStartInfo("ms-settings:notifications") { UseShellExecute = true }));
         menu.Items.Add(_autostartItem);
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add("Exit", null, (_, _) => ExitRequested?.Invoke());
@@ -58,7 +54,6 @@ internal sealed class AccessTrayIcon : IDisposable
             Visible = false
         };
         _icon.DoubleClick += (_, _) => ProductPaths.LaunchAutodeskAccess();
-        _icon.Click += (_, _) => _monitor?.RunOnceManually();
 
         _monitor = new UpdateMonitor(reader, _dedupe, interval, status =>
         {
