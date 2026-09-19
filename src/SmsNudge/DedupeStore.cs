@@ -32,4 +32,9 @@ public sealed class DedupeStore
         }
         catch { }
     }
+
+    public void Clear()
+    {
+        try { if (File.Exists(_path)) File.Delete(_path); } catch { }
+    }
 }

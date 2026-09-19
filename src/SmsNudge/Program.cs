@@ -14,6 +14,11 @@ internal static class Program
 
         if (args.Any(a => a.Equals("--once", StringComparison.OrdinalIgnoreCase)))
             return RunOnce(config);
+        if (args.Any(a => a.Equals("--dump-bundles", StringComparison.OrdinalIgnoreCase)))
+        {
+            Console.WriteLine(new AccessStateReader().DumpRaw());
+            return 0;
+        }
         if (args.Any(a => a.Equals("--test-toast", StringComparison.OrdinalIgnoreCase)))
         {
             ApplicationConfiguration.Initialize();

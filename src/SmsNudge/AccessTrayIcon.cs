@@ -8,6 +8,7 @@ internal sealed class AccessTrayIcon : IDisposable
 
     private readonly NotifyIcon _icon;
     private readonly UpdateMonitor _monitor;
+    private readonly DedupeStore _dedupe;
     private readonly ToolStripMenuItem _statusItem;
     private readonly ToolStripMenuItem _autostartItem;
     private readonly EventWaitHandle _shutdownSignal;
@@ -18,7 +19,7 @@ internal sealed class AccessTrayIcon : IDisposable
         var configDir = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "SMS-autodesk-access-nudge");
-        var dedupe = new DedupeStore(Path.Combine(configDir, "notified-state.json"));
+        _dedupe = new DedupeStore(Path.Combine(configDir, "notified-state.json"));
         var reader = new AccessStateReader();
         var interval = TimeSpan.FromMinutes(Math.Max(1, config.PollIntervalMinutes));
 
@@ -39,6 +40,11 @@ internal sealed class AccessTrayIcon : IDisposable
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add("Open Autodesk Access", null, (_, _) => ProductPaths.LaunchAutodeskAccess());
         menu.Items.Add("Check now", null, (_, _) => _monitor?.RunOnceManually());
+        menu.Items.Add("Re-notify now", null, (_, _) =>
+        {
+            _dedupe.Clear();
+            _monitor?.RunOnceManually();
+        });
         menu.Items.Add("Show test toast", null, (_, _) => ToastNotifier.ShowRunningTest());
         menu.Items.Add(_autostartItem);
         menu.Items.Add(new ToolStripSeparator());
@@ -54,7 +60,7 @@ internal sealed class AccessTrayIcon : IDisposable
         _icon.DoubleClick += (_, _) => ProductPaths.LaunchAutodeskAccess();
         _icon.Click += (_, _) => _monitor?.RunOnceManually();
 
-        _monitor = new UpdateMonitor(reader, dedupe, interval, status =>
+        _monitor = new UpdateMonitor(reader, _dedupe, interval, status =>
         {
             try
             {
