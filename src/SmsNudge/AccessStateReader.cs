@@ -243,7 +243,7 @@ public sealed class AccessStateReader
                 Name: asset.DisplayName,
                 Plc: asset.Plc,
                 Release: asset.PlcVersion,
-                InstalledVersion: installedMax.ToString(),
+                InstalledVersion: installedMax!.ToString(),
                 AvailableVersion: asset.BuildNumber,
                 UpgradeCode: asset.UpgradeCode));
         }

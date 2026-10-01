@@ -39,6 +39,17 @@ internal static class Program
             ToastNotifier.ShowRunningTest();
             return 0;
         }
+        if (args.Any(a => a.Equals("--digest-test", StringComparison.OrdinalIgnoreCase)))
+        {
+            var cfg = LoadConfig();
+            var snapshot = new AccessStateReader().ReadSnapshot();
+            var updates = snapshot.Updates.Where(u => cfg.MatchesPlc(u.Plc)).ToList();
+            if (updates.Count == 0)
+                ToastNotifier.ShowRunningTest();
+            else
+                ToastNotifier.ShowDigest(updates);
+            return 0;
+        }
         if (args.Any(a => a.Equals("--remove-autostart", StringComparison.OrdinalIgnoreCase)))
         {
             AutoStart.Disable();
