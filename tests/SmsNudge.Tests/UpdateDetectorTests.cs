@@ -92,4 +92,48 @@ public class UpdateDetectorTests
         Assert.Equal(snapshot1.DedupeKey, snapshot2.DedupeKey);
         Assert.NotEqual(snapshot1.DedupeKey, snapshot3.DedupeKey);
     }
+
+    [Fact]
+    public void LicensingService_UpdateDetected_WhenNewerThanInstalled()
+    {
+        var updates = new AccessStateReader().ComputeAvailableUpdates(
+            Array.Empty<BundleRow>(),
+            new[] { Asset("Autodesk Licensing Service - 17.0.0.16519 - Windows", "PLC0000036", "1.0", "17.0.0.16519") },
+            licensingInstalledVersion: () => new Version(16, 6, 0, 16341));
+        var update = Assert.Single(updates);
+        Assert.Equal("Autodesk Licensing Service - 17.0.0.16519 - Windows", update.Name);
+        Assert.Equal("17.0.0.16519", update.AvailableVersion);
+        Assert.Equal("16.6.0.16341", update.InstalledVersion);
+    }
+
+    [Fact]
+    public void LicensingService_NoUpdate_WhenInstalledCurrent()
+    {
+        var updates = new AccessStateReader().ComputeAvailableUpdates(
+            Array.Empty<BundleRow>(),
+            new[] { Asset("Autodesk Licensing Service - 17.0.0.16519 - Windows", "PLC0000036", "1.0", "17.0.0.16519") },
+            licensingInstalledVersion: () => new Version(17, 0, 0, 16519));
+        Assert.Empty(updates);
+    }
+
+    [Fact]
+    public void LicensingService_UpdateStillReported_WhenInstalledVersionUnknown()
+    {
+        var updates = new AccessStateReader().ComputeAvailableUpdates(
+            Array.Empty<BundleRow>(),
+            new[] { Asset("Autodesk Licensing Service - 17.0.0.16519 - Windows", "PLC0000036", "1.0", "17.0.0.16519") },
+            licensingInstalledVersion: () => null);
+        var update = Assert.Single(updates);
+        Assert.Equal("", update.InstalledVersion);
+    }
+
+    [Fact]
+    public void NonLicensing_AssetWithoutInstalledLine_StillSkipped()
+    {
+        var updates = new AccessStateReader().ComputeAvailableUpdates(
+            Array.Empty<BundleRow>(),
+            new[] { Asset("Autodesk AutoCAD 2025.1.4 Update", "ACD", "2025", "25.0.189.0") },
+            licensingInstalledVersion: () => new Version(16, 6, 0, 16341));
+        Assert.Empty(updates);
+    }
 }

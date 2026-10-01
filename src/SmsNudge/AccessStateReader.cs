@@ -220,7 +220,8 @@ public sealed class AccessStateReader
         return rows;
     }
 
-    public List<AvailableUpdate> ComputeAvailableUpdates(IEnumerable<BundleRow> bundles, IEnumerable<AssetRow> assets)
+    public List<AvailableUpdate> ComputeAvailableUpdates(IEnumerable<BundleRow> bundles, IEnumerable<AssetRow> assets,
+        Func<Version?>? licensingInstalledVersion = null)
     {
         // A product line is identified by (plc, release). Access's UI-visible
         // "update available" lives in LocalCache.db AssetList: a row whose
@@ -236,18 +237,69 @@ public sealed class AccessStateReader
         {
             var target = TryParseVersion(asset.BuildNumber);
             if (target is null) continue;
-            if (!installedByLine.TryGetValue((asset.Plc.Trim().ToLowerInvariant(), asset.PlcVersion.Trim().ToLowerInvariant()), out var installedMax)) continue;
+            var lineKey = (asset.Plc.Trim().ToLowerInvariant(), asset.PlcVersion.Trim().ToLowerInvariant());
+            Version? installedMax;
+            if (installedByLine.TryGetValue(lineKey, out var foundMax))
+            {
+                installedMax = foundMax;
+            }
+            else if (string.Equals(asset.Plc.Trim(), "PLC0000036", StringComparison.OrdinalIgnoreCase))
+            {
+                // Autodesk Licensing Service: installed outside ODIS bundle
+                // tracking, so there is no Install.db line to match. Its
+                // installed version comes from AdskLicensing\version.ini.
+                // Unknown installed version still yields the card, matching
+                // Autodesk Access, which always lists pending licensing updates.
+                installedMax = licensingInstalledVersion != null
+                    ? licensingInstalledVersion()
+                    : ReadInstalledLicensingVersion();
+            }
+            else
+            {
+                continue;
+            }
             if (target <= installedMax) continue;
 
             updates.Add(new AvailableUpdate(
                 Name: asset.DisplayName,
                 Plc: asset.Plc,
                 Release: asset.PlcVersion,
-                InstalledVersion: installedMax!.ToString(),
+                InstalledVersion: installedMax?.ToString() ?? "",
                 AvailableVersion: asset.BuildNumber,
                 UpgradeCode: asset.UpgradeCode));
         }
         return updates;
+    }
+
+    private static Version? ReadInstalledLicensingVersion()
+    {
+        try
+        {
+            var root = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86),
+                "Common Files", "Autodesk Shared", "AdskLicensing");
+            var ini = Path.Combine(root, "version.ini");
+            if (File.Exists(ini))
+            {
+                foreach (var line in File.ReadLines(ini))
+                {
+                    var trimmed = line.Trim();
+                    if (trimmed.StartsWith("version=", StringComparison.OrdinalIgnoreCase)
+                        && TryParseVersion(trimmed["version=".Length..]) is { } v)
+                        return v;
+                }
+            }
+            return Directory.GetDirectories(root)
+                .Select(d => TryParseVersion(Path.GetFileName(d)))
+                .Where(v => v is not null)
+                .Select(v => v!)
+                .OrderByDescending(v => v)
+                .FirstOrDefault();
+        }
+        catch (Exception)
+        {
+            return null;
+        }
     }
 
     private static Version? TryParseVersion(string? value) =>

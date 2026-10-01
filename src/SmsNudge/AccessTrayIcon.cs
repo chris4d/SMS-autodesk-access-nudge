@@ -12,6 +12,8 @@ internal sealed class AccessTrayIcon : IDisposable
     private readonly DedupeStore _dedupe;
     private readonly ToolStripMenuItem _statusItem;
     private readonly ToolStripMenuItem _autostartItem;
+    private readonly ContextMenuStrip _menu;
+    private volatile string? _latestStatus;
     private readonly EventWaitHandle _shutdownSignal;
 
     public AccessTrayIcon(AppConfig config, EventWaitHandle shutdownSignal)
@@ -37,6 +39,7 @@ internal sealed class AccessTrayIcon : IDisposable
         };
 
         var menu = new ContextMenuStrip();
+        _menu = menu;
         menu.Items.Add(_statusItem);
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add("Open Autodesk Access", null, (_, _) => ProductPaths.LaunchAutodeskAccess());
@@ -45,6 +48,7 @@ internal sealed class AccessTrayIcon : IDisposable
         menu.Items.Add(_autostartItem);
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add("Exit", null, (_, _) => ExitRequested?.Invoke());
+        menu.Opening += (_, _) => ApplyStatusToMenu();
 
         _icon = new NotifyIcon
         {
@@ -57,13 +61,29 @@ internal sealed class AccessTrayIcon : IDisposable
 
         _monitor = new UpdateMonitor(reader, _dedupe, interval, status =>
         {
+            _latestStatus = status;
             try
             {
                 _icon.Text = status;
             }
             catch { }
+            ApplyStatusToMenu();
             NudgeLogger.Info($"Status: {status}");
         }, timing: config.Timing, filter: u => config.MatchesPlc(u.Plc));
+    }
+
+    // Called from the monitor's background thread and again when the menu
+    // opens. BeginInvoke marshals to the UI thread when the menu handle
+    // exists; if it does not yet, the Opening handler re-applies the latest
+    // status on open.
+    private void ApplyStatusToMenu()
+    {
+        if (_latestStatus is not { } status) return;
+        try
+        {
+            _menu.BeginInvoke(() => _statusItem.Text = status);
+        }
+        catch { }
     }
 
     private Icon LoadAppIcon()

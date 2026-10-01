@@ -56,7 +56,10 @@ Left-click or double-left-click also triggers an immediate check.
 
 - `PollIntervalMinutes` — how often to re-read Access's state
 - `PlcFilter` — restrict notifications to certain product lines, e.g. `["RVT", "ACD"]`.
-  Empty means all products Access covers.
+  Empty means all products Access covers. Known lines include `ACD`, `RVT`,
+  `DSKCON`, and `PLC0000036` (Autodesk Licensing Service; its installed version
+  is read from `%ProgramFiles(x86)%\Common Files\Autodesk Shared\AdskLicensing\version.ini`,
+  so unlike product lines it does not depend on an Install.db bundle match).
 - `NotifTiming.Mode` — `Immediate` (default: toast as soon as a new update set
   is detected) or `DailyDigest` (no per-update toasts; one daily digest toast
   at `DigestTime` local time on `DigestDays`, listing the updates that are
