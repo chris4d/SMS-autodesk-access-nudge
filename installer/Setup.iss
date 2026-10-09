@@ -26,6 +26,9 @@ OutputDir={#OutputDir}
 OutputBaseFilename=Setup-SmsNudge-v{#AppVersion}
 UninstallDisplayName={#AppName}
 UninstallDisplayIcon={app}\SmsNudge.exe
+; Nudge exe embeds the shared icon; this gives the installer exe itself the
+; same identity (was the default Inno icon).
+SetupIconFile=assets\app-icon.ico
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
